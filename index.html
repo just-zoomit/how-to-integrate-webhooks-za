@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <meta name="theme-color" content="#4F7DC9">
   <meta charset="UTF-8">
-  <title># Integrate multi-feature app integration: Webhooks</title>
+  <title>Integrate multi-feature app integration: Webhooks</title>
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
   <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
@@ -23,16 +23,210 @@
   <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
   <google-codelab codelab-gaid=""
                   codelab-ga4id=""
-                  id="how-to-integrete-webhooks"
-                  title="# Integrate multi-feature app integration: Webhooks"
+                  id="how-to-integrate-webhooks"
+                  title="Integrate multi-feature app integration: Webhooks"
                   environment="web"
                   feedback-link="https://devforum.zoom.us/c/zoom-apps">
     
       <google-codelab-step label="Before you begin" duration="0">
-        <p>⚠️ <strong>Warning:</strong> This feature requires a paid plan and manifest beta program access.</p>
+        <p>⚠️ <strong>Warning:</strong> This guide assumes you&#39;re familiar building within the Zoom Workspace. You can start here or go back to the beginning of the full guide if you&#39;re new to Zoom App development.</p>
 <p>💡 <strong>Tip:</strong> If you don&#39;t have a paid workspace for development, you can join the <a href="https://api.slack.com/developer-program" target="_blank">Developer Program</a> and provision a sandbox with access to all Zoom Developer platform features for free.</p>
-<h2 is-upgraded>Introduction</h2>
-<p>//TO-DO</p>
+<h2 is-upgraded>Prerequisites</h2>
+<ul>
+<li>A Zoom Developer Account</li>
+<li>A Supabase Account</li>
+<li>A Ngrok Account</li>
+<li>Knowledge of Next.js and JavaScript</li>
+</ul>
+<h2 is-upgraded>📚 What You&#39;ll Learn</h2>
+<p>✓ How to get Zoom Rest API token</p>
+<p>✓ How to send teamchat message to Zoom Client</p>
+<p>✓ How to customized messages</p>
+<h2 is-upgraded>🧰 What You&#39;ll Need</h2>
+<ul>
+<li>Git</li>
+<li>Node.js</li>
+<li>Browser</li>
+<li>Code editor and terminal</li>
+<li>Zoom Developer Account for the creation and management of your Zoom App SDK</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Introduction" duration="0">
+        <p>In this guide, you&#39;ll learn how to add support for Team Chat and Chatbot webhooks.</p>
+<p>By the end, you&#39;ll have:</p>
+<ul>
+<li>A application that recieves Zoom Team Chat and Chatbot webhook events.</li>
+</ul>
+<h2 is-upgraded>🛠️ Project Setup</h2>
+<ol type="1">
+<li>Clone the project and switch to the correct branch:</li>
+</ol>
+<pre><code language="language-bash" class="language-bash">git clone https://github.com/zoom/task-manager-sample.git
+cd task-manager-sample
+git checkout step-4-deep-linking
+
+</code></pre>
+<ol type="1" start="2">
+<li>Install dependencies and start the app:</li>
+</ol>
+<pre><code language="language-bash" class="language-bash">npm install
+npm run dev
+
+</code></pre>
+<p>Now, you have a Task Manager application that recieves Zoom Team Chat and Chatbot webhooks events.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Team Chat webhooks" duration="0">
+        <p>Create a new file: <code>app/api/zoom/webhook/teamchat/route.ts</code></p>
+<p>Paste in the following starter code:</p>
+<pre><code language="language-javascript" class="language-javascript">import { NextRequest, NextResponse } from &#34;next/server&#34;;
+import crypto from &#34;crypto&#34;;
+
+const ZOOM_SECRET_TOKEN = process.env.ZOOM_SECRET_TOKEN || &#34;&#34;;
+const ZOOM_VERIFICATION_TOKEN = process.env.ZOOM_VERIFICATION_TOKEN || &#34;&#34;;
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    if (!body) {
+      return NextResponse.json({ error: &#34;No Request Body&#34; }, { status: 400 });
+    }
+
+    // Handle Zoom Webhook URL validation
+    if (body.event === &#34;endpoint.url_validation&#34;) {
+      const hashForValidation = crypto
+        .createHmac(&#34;sha256&#34;, ZOOM_SECRET_TOKEN)
+        .update(body.payload.plainToken)
+        .digest(&#34;hex&#34;);
+
+      return NextResponse.json({
+        plainToken: body.payload.plainToken,
+        encryptedToken: hashForValidation,
+      });
+    }
+
+    // // Verify Authorization Header (Optional but Recommended)
+    const authHeader = req.headers.get(&#34;authorization&#34;) || &#34;&#34;;
+    if (authHeader !== ZOOM_VERIFICATION_TOKEN) {
+      return NextResponse.json({ error: &#34;Unauthorized request&#34; }, { status: 401 });
+    }
+
+    // Process Webhook Events
+    switch (body.event) {
+
+      case &#34;team_chat.channel_message_posted&#34;:
+        console.log(&#34;📢 Team Chat Channel Posted Notification:&#34;, body.payload);
+        return NextResponse.json({ message: &#34;Notification received.&#34; }, { status: 200 });
+
+      case &#34;team_chat.chatbot_added&#34;:
+        console.log(&#34;👁️ Team Chat Channel Bot 🤖 Added Notification:&#34;, body.payload);
+        return NextResponse.json({ message: &#34;Notification received.&#34; }, { status: 200 });
+
+      default:
+        console.warn(&#34;⚠️ Unknown event:&#34;, body.event);
+        return NextResponse.json({ error: &#34;Unknown event type&#34; }, { status: 400 });
+    }
+  } catch (error) {
+    console.error(&#34;❌ Error handling Zoom webhook:&#34;, error);
+    return NextResponse.json({ error: &#34;Internal Server Error&#34; }, { status: 500 });
+  }
+}
+</code></pre>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/api/webhooks/" target="_blank">Using webhooks</a></li>
+<li><a href="https://developers.zoom.us/docs/api/team-chat/events/#tag/chat_channel/POSTchat_channel.created" target="_blank">Team Chat webhooks</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Create Team Chatbot Webhooks" duration="0">
+        <p>Create a new file: <code>app/api/zoom/webhook/chatbot/route.ts</code></p>
+<p>Paste in the following starter code:</p>
+<pre><code language="language-javascript" class="language-javascript">import { NextRequest, NextResponse } from &#34;next/server&#34;;
+
+import crypto from &#34;crypto&#34;;
+
+
+const ZOOM_SECRET_TOKEN = process.env.ZOOM_SECRET_TOKEN || &#34;&#34;;
+const ZOOM_VERIFICATION_TOKEN = process.env.ZOOM_VERIFICATION_TOKEN || &#34;&#34;;
+
+
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    if (!body) {
+      return NextResponse.json({ error: &#34;No Request Body&#34; }, { status: 400 });
+    }
+
+    // Handle Zoom Webhook URL validation
+    if (body.event === &#34;endpoint.url_validation&#34;) {
+      const hashForValidation = crypto
+        .createHmac(&#34;sha256&#34;, ZOOM_SECRET_TOKEN)
+        .update(body.payload.plainToken)
+        .digest(&#34;hex&#34;);
+
+      return NextResponse.json({
+        plainToken: body.payload.plainToken,
+        encryptedToken: hashForValidation,
+      });
+    }
+
+    // // Verify Authorization Header (Optional but Recommended)
+    const authHeader = req.headers.get(&#34;authorization&#34;) || &#34;&#34;;
+    if (authHeader !== ZOOM_VERIFICATION_TOKEN) {
+      return NextResponse.json({ error: &#34;Unauthorized request&#34; }, { status: 401 });
+    }
+
+    // Process Webhook Events
+    if (body.event === &#34;bot_notification&#34;) {
+      console.log(&#34; 🏁 Bot Notification Received&#34;, body.payload);
+
+    }
+
+    // Process Webhook Events
+    switch (body.event) {
+      case &#39;bot_installed&#39;:
+        console.log(&#34;✅ Bot Installed&#34;, body.payload);
+        return NextResponse.json({ message: &#34;Bot installed successfully.&#34; }, { status: 200 });
+
+      case &#39;team_chat.link_shared&#39;:
+        console.log(&#34;🤖 Unfurlable Link Shared&#34;, body.payload);
+        return NextResponse.json({ message: &#34;Bot installed successfully.&#34; }, { status: 200 });
+
+      default:
+        console.warn(&#34;⚠️ Unknown event:&#34;, body.event);
+        return NextResponse.json({ error: &#34;Unknown event type&#34; }, { status: 400 });
+    }
+  } catch (error) {
+    console.error(&#34;❌ Error handling Zoom webhook:&#34;, error);
+    return NextResponse.json({ error: &#34;Internal Server Error&#34; }, { status: 500 });
+  }
+}
+
+</code></pre>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/api/webhooks/" target="_blank">Using webhooks</a></li>
+<li><a href="https://developers.zoom.us/docs/api/chatbot/events/" target="_blank">Chatbot webhooks</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Conclusion" duration="0">
+        <p>Congratulations! You&#39;ve successfully added deep linking support to your Zoom App and chatbot within the Zoom Client.</p>
+<p>Here&#39;s a quick recap of what you used:</p>
+<h2 is-upgraded>Learn more</h2>
 
 
       </google-codelab-step>

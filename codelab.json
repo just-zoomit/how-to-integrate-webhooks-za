@@ -3,10 +3,10 @@
   "format": "html",
   "prefix": "https://storage.googleapis.com",
   "mainga": "UA-49880327-14",
-  "updated": "2025-04-22T06:41:42-04:00",
-  "id": "how-to-integrete-webhooks",
+  "updated": "2025-04-23T19:39:53-04:00",
+  "id": "how-to-integrate-webhooks",
   "duration": 0,
-  "title": "# Integrate multi-feature app integration: Webhooks",
+  "title": "Integrate multi-feature app integration: Webhooks",
   "authors": "Donte",
   "summary": "How to integrate Webhooks with Zoom App SDK",
   "source": "06_integrate-webhooks.md",
@@ -21,5 +21,5 @@
     "medium"
   ],
   "feedback": "https://devforum.zoom.us/c/zoom-apps",
-  "url": "how-to-integrete-webhooks"
+  "url": "how-to-integrate-webhooks"
 }
