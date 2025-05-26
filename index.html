@@ -69,7 +69,7 @@
 
       </google-codelab-step>
     
-      <google-codelab-step label="Project Setup" duration="0">
+      <google-codelab-step label="Set up the project" duration="0">
         <ol type="1">
 <li>Clone the project and switch to the correct branch:</li>
 </ol>
@@ -86,15 +86,19 @@ npm run dev
 
 </code></pre>
 <p>Now, you have a Task Manager application that recieves Zoom Team Chat and Chatbot webhooks events.</p>
+<p>Here is a professionally revised version of your overview that ensures editorial consistency, technical accuracy, and alignment with documentation standards:</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Zoom Team Chat and Chatbot Webhooks" duration="0">
-        <p>In this guide, you&#39;ll learn how to add support for Team Chat and Chatbot webhooks.</p>
-<p>By the end, you&#39;ll have:</p>
+      <google-codelab-step label="Overview: Support Zoom Team Chat and Chatbot webhooks" duration="0">
+        <p>In this guide, you will learn how to add support for Zoom Team Chat and Chatbot webhooks. Rather than polling the Zoom API to retrieve data, you will configure your app to receive real-time webhook events that Zoom sends to your server as HTTP POST requests with a JSON payload.</p>
+<h2 is-upgraded>By the end of this guide, you will:</h2>
 <ul>
-<li>A application that recieves Zoom Team Chat and Chatbot webhook events.</li>
+<li>Have a working application that receives Zoom Team Chat and Chatbot webhook events</li>
+<li>Ensure your webhook endpoint handles Zoom&#39;s validation requests correctly</li>
+<li>Implement revalidation logic in your integration</li>
+<li>Use your app&#39;s secret token for webhook verification instead of the legacy verification token</li>
 </ul>
 <h2 is-upgraded>Resources</h2>
 <ul>
@@ -106,7 +110,11 @@ npm run dev
       </google-codelab-step>
     
       <google-codelab-step label="Create Team Chat webhooks" duration="0">
-        <p>Create a new file: <code>app/api/zoom/webhook/teamchat/route.ts</code></p>
+        <p>In this section, you will create a POST route to handle Zoom Team Chat webhook requests.</p>
+<p>Zoom provides a webhook secret token on the Add Feature page of your app. This token is used to generate a hash of the webhook payload, which Zoom includes in the x-zm-signature request header.</p>
+<p><strong>⚠️ Note:</strong> Zoom requires manual webhook validation when you add a new webhook or modify an existing one.</p>
+<h2 is-upgraded>Step 1: Create a POST route for Team Chat webhook events</h2>
+<p><strong>File Path: </strong><code>app/api/zoom/webhook/teamchat/route.ts</code></p>
 <p>Paste in the following starter code:</p>
 <pre><code language="language-javascript" class="language-javascript">import { NextRequest, NextResponse } from &#34;next/server&#34;;
 import crypto from &#34;crypto&#34;;
@@ -171,8 +179,10 @@ export async function POST(req: NextRequest) {
 
       </google-codelab-step>
     
-      <google-codelab-step label="Create Team Chatbot Webhooks" duration="0">
-        <p>Create a new file: <code>app/api/zoom/webhook/chatbot/route.ts</code></p>
+      <google-codelab-step label="Create Team Chat webhooks" duration="0">
+        <p>In this section, you will create a POST route to handle Zoom Team Chat webhook requests.</p>
+<h2 is-upgraded>Step 2: Create a POST route for Team Chat webhook events</h2>
+<p><strong>File Path: </strong><code>app/api/zoom/webhook/chatbot/route.ts</code></p>
 <p>Paste in the following starter code:</p>
 <pre><code language="language-javascript" class="language-javascript">import { NextRequest, NextResponse } from &#34;next/server&#34;;
 
